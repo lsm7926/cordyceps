@@ -127,3 +127,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# personal
+venv/
+superpixel/raw_images
+superpixel/converted_images
+superpixel/segmented_images
+cnn/data
+cnn/model
+cnn/inference_test_img
+cnn/crop_img
+config.py
+cordyceps.h5
