@@ -129,10 +129,10 @@ dmypy.json
 .pyre/
 
 # personal
-venv/
-superpixel/raw_images
-superpixel/converted_images
-superpixel/segmented_images
+myvenv/
+cnn/raw_images
+cnn/converted_images
+cnn/segmented_images
 cnn/data
 cnn/model
 cnn/inference_test_img
