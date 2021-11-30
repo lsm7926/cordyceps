@@ -132,7 +132,7 @@ dmypy.json
 myvenv/
 cnn/raw_images
 cnn/converted_images
-cnn/segmented_images
+cnn/train_images
 cnn/data
 cnn/model
 cnn/inference_test_img
