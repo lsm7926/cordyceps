@@ -17,10 +17,13 @@ IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)
 
 class Model:
     def __init__(self):
-        self.dataset_path = os.path.join(cfg['base']['path'], cfg['data']['dir'], cfg['data']['dataset'])
+        self.dataset_path = os.path.join(cfg['base']['path'],
+                                         cfg['data']['dir'],
+                                         cfg['data']['dataset'])
         with open(self.dataset_path,"rb") as file:
             self.dataset = pickle.load(file)
-        self.save_model_path = os.path.join(cfg['base']['path'],cfg['model']['dir'])
+        self.save_model_path = os.path.join(cfg['base']['path'],
+                                            cfg['model']['dir'])
         self.train_images = self.dataset[0]  
         self.train_labels = self.dataset[1]
         self.test_images = self.dataset[2]

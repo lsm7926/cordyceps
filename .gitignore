@@ -130,12 +130,8 @@ dmypy.json
 
 # personal
 myvenv/
-cnn/raw_images
-cnn/converted_images
-cnn/train_images
 cnn/data
+cnn/image
 cnn/model
-cnn/inference_test_img
-cnn/crop_img
 config.py
 cordyceps.h5

@@ -5,8 +5,8 @@ import torch
 import utility
 import superpixel
 
-model = torch.hub.load('ultralytics/yolov5','custom', path='/home/ubuntu/dev/cordyceps/cnn/last.pt', force_reload=True)
-n_segments = 25
+YOLO = torch.hub.load('ultralytics/yolov5','custom', path=os.path.join(cfg['base']['path'],'last.pt'), force_reload=True)
+N_SEGMENTS = 25
 
 
 class Segment():
@@ -23,19 +23,25 @@ class Segment():
                 
                 
     def process(self):
-        files = utility.get_files_fullpath(cfg['raw']['path'])
+        path = os.path.join(cfg['base']['path'],
+                            cfg['image']['path'],
+                            cfg['image']['train']['path'],
+                            cfg['image']['train']['dir']['raw'])
+        
+        files = utility.get_files_fullpath(path)
         for idx, file in enumerate(files):
             filename = os.path.basename(file)
             sp = superpixel.Superpixel()
-            results = model(file)
+            results = YOLO(file)
             object = results.crop(save=False)
-            image = list()
+            imgs = list()
             for obj in object:
-                image.append((obj['im'], sp.makeslic(obj['im'],n_segments)))
+                imgs.append((obj['im'], sp.makeslic(obj['im'],N_SEGMENTS)))
             
-            for img,slic in image:
-                slic = sp.makeslic(img,n_segments)
-                sp.saveslic(img,slic,idx)
+            for img,slic in imgs:
+                slic = sp.makeslic(img,N_SEGMENTS)
+                size = 64
+                sp.saveslic(img,slic,idx, size)
             
             print('{} / {} {} Done.'.format(idx + 1, len(files), filename))
 

@@ -5,7 +5,7 @@ import cv2
 import os
 from rembg.bg import remove
 from io import BytesIO
-from skimage import color, morphology, segmentation, filters
+from skimage import segmentation
 from skimage.measure import regionprops
 from config import cfg
 
@@ -27,10 +27,9 @@ class Superpixel:
         return slic
 
 
-    def saveslic(self, res, segments, index):
+    def saveslic(self, res, segments, index, size):
         image=np.array(res)
         regions = regionprops(segments,intensity_image=image)
-        size=cfg['seg']['crop']
 
         for idx,props in enumerate(regions):
             cy, cx = props.centroid
@@ -46,5 +45,9 @@ class Superpixel:
             cropped_img = cropped_img.resize((227,227))
             cropped_img = cv2.cvtColor(np.array(cropped_img), cv2.COLOR_RGB2HSV)
             
-            segment_img_file = os.path.join(cfg['seg']['path'],'{:03d}{:03d}.jpg'.format(index,idx))
+            path = os.path.join(cfg['base']['path'],
+                                cfg['image']['path'],
+                                cfg['image']['train']['path'],
+                                cfg['image']['train']['dir']['seg'])
+            segment_img_file = os.path.join(path,'{:03d}{:03d}.jpg'.format(index,idx))
             cv2.imwrite(segment_img_file,cropped_img)
