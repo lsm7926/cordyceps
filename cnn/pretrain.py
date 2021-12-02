@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from absl import app
 from config import cfg
 
+
 print(tf.__version__)
 print(keras.__version__)
 IMG_SIZE=227

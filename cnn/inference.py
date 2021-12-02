@@ -10,9 +10,11 @@ from config import cfg
 import torch
 import math
 
+
 YOLO = torch.hub.load('ultralytics/yolov5','custom', path=os.path.join(cfg['base']['path'],'last.pt'), force_reload=True)
 TENSORFLOW = tf.keras.models.load_model(os.path.join(cfg['base']['path'],cfg['model']['dir'],cfg['model']['version']))
 N_SEGMENTS = 25
+
 
 class Inference():
     
@@ -33,21 +35,22 @@ class Inference():
         object = results.crop(save=False)
         imgs = list()
         for obj in object:
-            imgs.append((obj['im'], sp.makeslic(obj['im'],N_SEGMENTS)))
+            img = obj['im']
+            removeexif = sp.removeexif(img)
+            threshold = sp.threshold(removeexif)
+            removebg = sp.removebg(threshold)
+            
+            mask = sp.mask(removebg)
+            imgs.append((removeexif, sp.maskslic(img,mask,N_SEGMENTS)))
         
         return imgs
 
     
     def preprocess_segment(self,image,props,idx,size,filename):
         
-        # crop segment
-        cy, cx = props.centroid
-        left = cx - int(size / 2)
-        right = left + size
-        top = cy - int(size / 2)
-        bottom = top + size
-        props_img = Image.fromarray(image)
-        cropped_img = props_img.crop((left, top, right, bottom))
+        bbox = props.bbox
+        props_image = Image.fromarray(image)
+        cropped_img = props_image.crop(bbox)
         
         # resize image
         cropped_img = np.array(cropped_img)
@@ -57,9 +60,9 @@ class Inference():
         
         # save segments to check
         path = os.path.join(cfg['base']['path'],
-                                          cfg['image']['path'],
-                                          cfg['image']['inference']['path'],
-                                          cfg['image']['inference']['dir']['seg'])
+                            cfg['image']['path'],
+                            cfg['image']['inference']['path'],
+                            cfg['image']['inference']['dir']['seg'])
         segment_img_file = os.path.join(path,'{:s}{:06d}.jpg'.format(filename,idx))
         cv2.imwrite(segment_img_file,resized_img)
         

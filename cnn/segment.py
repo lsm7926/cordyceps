@@ -4,9 +4,10 @@ from config import cfg
 import torch
 import utility
 import superpixel
+import math
 
 YOLO = torch.hub.load('ultralytics/yolov5','custom', path=os.path.join(cfg['base']['path'],'last.pt'), force_reload=True)
-N_SEGMENTS = 25
+N_SEGMENTS = 20
 
 
 class Segment():
@@ -29,18 +30,25 @@ class Segment():
                             cfg['image']['train']['dir']['raw'])
         
         files = utility.get_files_fullpath(path)
+        
         for idx, file in enumerate(files):
             filename = os.path.basename(file)
             sp = superpixel.Superpixel()
             results = YOLO(file)
             object = results.crop(save=False)
             imgs = list()
+            
             for obj in object:
-                imgs.append((obj['im'], sp.makeslic(obj['im'],N_SEGMENTS)))
+                img = obj['im']
+                removeexif = sp.removeexif(img)
+                threshold = sp.threshold(removeexif)
+                removebg = sp.removebg(threshold)
+                
+                mask = sp.mask(removebg)
+                imgs.append((removeexif, sp.maskslic(img,mask,N_SEGMENTS)))
             
             for img,slic in imgs:
-                slic = sp.makeslic(img,N_SEGMENTS)
-                size = 64
+                size = len(slic)//math.sqrt(N_SEGMENTS)
                 sp.saveslic(img,slic,idx, size)
             
             print('{} / {} {} Done.'.format(idx + 1, len(files), filename))

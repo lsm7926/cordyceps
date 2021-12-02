@@ -5,12 +5,35 @@ import cv2
 import os
 from rembg.bg import remove
 from io import BytesIO
-from skimage import segmentation
+from skimage import io, color, morphology, segmentation
 from skimage.measure import regionprops
 from config import cfg
 
 
 class Superpixel:
+    
+    def removeexif(self, input_image):
+        image = Image.fromarray(input_image)
+        data = list(image.getdata())
+        image_without_exif = Image.new(image.mode, image.size)
+        image_without_exif.putdata(data)
+
+        return image_without_exif
+
+
+    def threshold(self, input_image):
+        image = cv2.cvtColor(np.array(input_image), cv2.COLOR_RGB2BGR)
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        h, s, v = cv2.split(hsv)
+        thr_s = cv2.threshold(s, 92, 255, cv2.THRESH_BINARY)[1]
+        thr_v = cv2.threshold(v, 128, 255, cv2.THRESH_BINARY)[1]
+        thr_v = 255 - thr_v
+        
+        mask = cv2.add(thr_s, thr_v)
+        image[mask==0] = (255, 255, 255)
+        encoded_bytes = cv2.imencode('.jpeg', image)[1]
+        
+        return encoded_bytes
     
     
     def removebg(self, input_image):
@@ -20,11 +43,24 @@ class Superpixel:
         return image
 
 
-    def makeslic(self, input_image, n_segments):
+    def mask(self, input_image):
         image = np.array(input_image)
-        slic = segmentation.slic(image, n_segments=n_segments, sigma=5, start_label=1)
+        lum = color.rgb2gray(image)
+        mask = morphology.remove_small_holes(morphology.remove_small_objects(lum > 0.05, 500), 500)
+        mask = morphology.area_closing(mask)
+        chull = morphology.convex_hull_image(mask)
+
+        return chull
+
+
+    def maskslic(self, input_image, mask, n_segments):
+        image = np.array(input_image)
+        m_slic = segmentation.slic(image, compactness=100, n_segments=n_segments, mask=mask, sigma=5, start_label=1)
+        mask = color.gray2rgb(mask)
+        masked_image = image*mask
+        io.imsave('/home/ubuntu/dev/cordyceps/save/1.jpg',segmentation.mark_boundaries(masked_image,m_slic))
         
-        return slic
+        return m_slic
 
 
     def saveslic(self, res, segments, index, size):
@@ -32,13 +68,9 @@ class Superpixel:
         regions = regionprops(segments,intensity_image=image)
 
         for idx,props in enumerate(regions):
-            cy, cx = props.centroid
-            left = cx - int(size / 2)
-            right = left + size
-            top = cy - int(size / 2)
-            bottom = top + size
+            bbox = props.bbox
             props_image = Image.fromarray(image)
-            cropped_img = props_image.crop((left, top, right, bottom))
+            cropped_img = props_image.crop(bbox)
             
             cropped_img = np.array(cropped_img)
             cropped_img = Image.fromarray(cropped_img)
