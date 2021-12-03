@@ -10,6 +10,9 @@ from skimage.measure import regionprops
 from config import cfg
 
 
+IMG_SIZE=64
+
+
 class Superpixel:
     
     def removeexif(self, input_image):
@@ -58,12 +61,12 @@ class Superpixel:
         m_slic = segmentation.slic(image, compactness=100, n_segments=n_segments, mask=mask, sigma=5, start_label=1)
         mask = color.gray2rgb(mask)
         masked_image = image*mask
-        io.imsave('/home/ubuntu/dev/cordyceps/save/1.jpg',segmentation.mark_boundaries(masked_image,m_slic))
+        io.imsave('/home/ubuntu/dev/cordyceps/test/slic.jpg',segmentation.mark_boundaries(cv2.cvtColor(masked_image,cv2.COLOR_BGR2RGB),m_slic))
         
         return m_slic
 
 
-    def saveslic(self, res, segments, index, size):
+    def saveslic(self, res, segments, index):
         image=np.array(res)
         regions = regionprops(segments,intensity_image=image)
 
@@ -74,7 +77,8 @@ class Superpixel:
             
             cropped_img = np.array(cropped_img)
             cropped_img = Image.fromarray(cropped_img)
-            cropped_img = cropped_img.resize((227,227))
+            cropped_img = cropped_img.resize((IMG_SIZE,IMG_SIZE))
+            # cropped_img = np.array(cropped_img)
             cropped_img = cv2.cvtColor(np.array(cropped_img), cv2.COLOR_RGB2HSV)
             
             path = os.path.join(cfg['base']['path'],

@@ -10,7 +10,7 @@ from config import cfg
 
 print(tf.__version__)
 print(keras.__version__)
-IMG_SIZE=227
+IMG_SIZE=64
 BATCH_SIZE=16
 SHUFFLE_BUFFER_SIZE = 1000
 IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)

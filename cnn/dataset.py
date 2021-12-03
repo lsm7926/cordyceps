@@ -16,6 +16,9 @@ print(tf.__version__)
 print(keras.__version__)
 
 
+IMG_SIZE=64
+
+
 class Dataset():
     def __init__(self):
         self.base_path = os.path.join(cfg['base']['path'],cfg['data']['dir'])
@@ -45,7 +48,7 @@ class Dataset():
             
             for image_name in image_datas:
                 image = Image.open(image_name)
-                image = image.resize((227,227))
+                image = image.resize((IMG_SIZE,IMG_SIZE))
                 image = np.array(image)
                 self.image_data.append(image)
                 self.label_data.append(self.class_name.index(label))

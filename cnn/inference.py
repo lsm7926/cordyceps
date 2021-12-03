@@ -14,7 +14,7 @@ import math
 YOLO = torch.hub.load('ultralytics/yolov5','custom', path=os.path.join(cfg['base']['path'],'last.pt'), force_reload=True)
 TENSORFLOW = tf.keras.models.load_model(os.path.join(cfg['base']['path'],cfg['model']['dir'],cfg['model']['version']))
 N_SEGMENTS = 25
-
+IMG_SIZE=64
 
 class Inference():
     
@@ -39,7 +39,6 @@ class Inference():
             removeexif = sp.removeexif(img)
             threshold = sp.threshold(removeexif)
             removebg = sp.removebg(threshold)
-            
             mask = sp.mask(removebg)
             imgs.append((removeexif, sp.maskslic(img,mask,N_SEGMENTS)))
         
@@ -47,7 +46,6 @@ class Inference():
 
     
     def preprocess_segment(self,image,props,idx,size,filename):
-        
         bbox = props.bbox
         props_image = Image.fromarray(image)
         cropped_img = props_image.crop(bbox)
@@ -55,7 +53,8 @@ class Inference():
         # resize image
         cropped_img = np.array(cropped_img)
         cropped_img = Image.fromarray(cropped_img)
-        resized_img = cropped_img.resize((227,227))
+        resized_img = cropped_img.resize((IMG_SIZE,IMG_SIZE))
+        # resized_img = np.array(resized_img)
         resized_img = cv2.cvtColor(np.array(resized_img), cv2.COLOR_RGB2HSV)
         
         # save segments to check
