@@ -7,7 +7,7 @@ import superpixel
 
 
 YOLO = torch.hub.load('ultralytics/yolov5','custom', path=os.path.join(cfg['base']['path'],'last.pt'), force_reload=True)
-N_SEGMENTS = 20
+N_SEGMENTS = 50
 
 
 class Segment():
@@ -35,11 +35,15 @@ class Segment():
             filename = os.path.basename(file)
             sp = superpixel.Superpixel()
             results = YOLO(file)
+            # results.show()
             object = results.crop(save=False)
             imgs = list()
             
             for obj in object:
                 img = obj['im']
+                shape = img.shape
+                if shape[0] <= 150 or shape[1] <=150:
+                    continue
                 removeexif = sp.removeexif(img)
                 threshold = sp.threshold(removeexif)
                 removebg = sp.removebg(threshold)
@@ -47,10 +51,10 @@ class Segment():
                 imgs.append((removebg, sp.maskslic(img,mask,N_SEGMENTS)))
             
             for img,slic in imgs:
-                sp.saveslic(img,slic,idx)
+                sp.saveslic(img,slic,filename)
             
             print('{} / {} {} Done.'.format(idx + 1, len(files), filename))
-
+            # exit()
 
     def __init__(self):
         self.use_gpu()

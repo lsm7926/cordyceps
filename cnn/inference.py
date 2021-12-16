@@ -13,7 +13,7 @@ import math
 
 YOLO = torch.hub.load('ultralytics/yolov5','custom', path=os.path.join(cfg['base']['path'],'last.pt'), force_reload=True)
 TENSORFLOW = tf.keras.models.load_model(os.path.join(cfg['base']['path'],cfg['model']['dir'],cfg['model']['version']))
-N_SEGMENTS = 25
+N_SEGMENTS = 50
 IMG_SIZE=64
 
 class Inference():
@@ -54,8 +54,8 @@ class Inference():
         cropped_img = np.array(cropped_img)
         cropped_img = Image.fromarray(cropped_img)
         resized_img = cropped_img.resize((IMG_SIZE,IMG_SIZE))
-        # resized_img = np.array(resized_img)
-        resized_img = cv2.cvtColor(np.array(resized_img), cv2.COLOR_RGB2HSV)
+        resized_img = np.array(resized_img)
+        # resized_img = cv2.cvtColor(np.array(resized_img), cv2.COLOR_RGB2HSV)
         
         # save segments to check
         path = os.path.join(cfg['base']['path'],
@@ -77,7 +77,7 @@ class Inference():
         contaminated=[]
         uncontaminated=[]
         size=len(slic)//math.sqrt(N_SEGMENTS)
-        filename = image_name.split('/')[-1]
+        filename = image_name.split('/')[-1].split('.')[0]
         
         for idx,props in enumerate(regions):
             input_img = self.preprocess_segment(img,props,idx,size,filename)
