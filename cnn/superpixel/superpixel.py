@@ -58,7 +58,7 @@ class Superpixel:
 
     def maskslic(self, input_image, mask, n_segments):
         image = np.array(input_image)
-        m_slic = segmentation.slic(image, compactness=100, n_segments=n_segments, mask=mask, sigma=5, start_label=1)
+        m_slic = segmentation.slic(image, n_segments=n_segments, mask=mask, sigma=5, start_label=1)
         mask = color.gray2rgb(mask)
         masked_image = image*mask
         io.imsave('/home/ubuntu/dev/cordyceps/process/maskslic.jpg',segmentation.mark_boundaries(cv2.cvtColor(masked_image,cv2.COLOR_BGR2RGB),m_slic))
@@ -95,4 +95,4 @@ class Superpixel:
                                 cfg['image']['train']['dir']['seg'])
             segment_img_file = os.path.join(path,'{:s}{:03d}.jpg'.format(filename,idx))
             cv2.imwrite(segment_img_file,cropped_img)
-        io.imsave('/home/ubuntu/dev/cordyceps/process/boundingbox.jpg',origin_image)
+        # io.imsave('/home/ubuntu/dev/cordyceps/process/boundingbox.jpg',origin_image)

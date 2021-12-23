@@ -4,7 +4,8 @@ from config import cfg
 import torch
 import utility
 import superpixel
-
+from skimage import io
+import cv2
 
 YOLO = torch.hub.load('ultralytics/yolov5','custom', path=os.path.join(cfg['base']['path'],'last.pt'), force_reload=True)
 N_SEGMENTS = 50
@@ -44,6 +45,8 @@ class Segment():
                 shape = img.shape
                 if shape[0] <= 150 or shape[1] <=150:
                     continue
+                save_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                io.imsave('/home/ubuntu/dev/cordyceps/process/raw.jpg',save_img)
                 removeexif = sp.removeexif(img)
                 threshold = sp.threshold(removeexif)
                 removebg = sp.removebg(threshold)

@@ -9,11 +9,14 @@ import cv2
 from config import cfg
 import torch
 import math
+from skimage import io
+import json
+import requests
 
 
 YOLO = torch.hub.load('ultralytics/yolov5','custom', path=os.path.join(cfg['base']['path'],'last.pt'), force_reload=True)
 TENSORFLOW = tf.keras.models.load_model(os.path.join(cfg['base']['path'],cfg['model']['dir'],cfg['model']['version']))
-N_SEGMENTS = 50
+N_SEGMENTS = 100
 IMG_SIZE=64
 
 class Inference():
@@ -45,10 +48,10 @@ class Inference():
         return imgs
 
     
-    def preprocess_segment(self,image,props,idx,size,filename):
-        bbox = props.bbox
-        props_image = Image.fromarray(image)
-        cropped_img = props_image.crop(bbox)
+    def preprocess_segment(self,image,cropped_img,idx,size,filename):
+        # bbox = props.bbox
+        # props_image = Image.fromarray(image)
+        # cropped_img = props_image.crop(bbox)
         
         # resize image
         cropped_img = np.array(cropped_img)
@@ -74,28 +77,44 @@ class Inference():
         img=np.array(image)
         class_name = ['contaminated','uncontaminated']
         regions = regionprops(slic,intensity_image=img)
-        contaminated=[]
-        uncontaminated=[]
+        contaminated = 0
         size=len(slic)//math.sqrt(N_SEGMENTS)
-        filename = image_name.split('/')[-1].split('.')[0]
+        filename = image_name.split('/')[-1]
+        origin_image = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+        true_or_false = 'f'
         
         for idx,props in enumerate(regions):
-            input_img = self.preprocess_segment(img,props,idx,size,filename)
-            prediction = TENSORFLOW.predict(input_img)
+            bbox = props.bbox
+            props_image = Image.fromarray(img)
+            cropped_img = props_image.crop(bbox)
+            shape = np.array(cropped_img).shape
+            if shape[0]/shape[1] > 1.5 or shape[1]/shape[0] > 1.5:
+                continue
             
-            if class_name[np.argmax(prediction)]=='contaminated':
-                contaminated.append(idx)
-            else:
-                uncontaminated.append(idx)
+            input_img = self.preprocess_segment(img,cropped_img,idx,size,filename)
+            img_tensor = input_img
+            
+            data = json.dumps({"signature_name": "serving_default", "instances": img_tensor.tolist()})
         
-        print(filename)
-        if len(contaminated) > len(uncontaminated):
-            print('result: contaminated')
-        else:
-            print('result: uncontaminated')
-        print("contaminated:",contaminated)
-        print("uncontaminated:",uncontaminated)
-        print()
+            # request prediction
+            headers = {"content-type": "application/json"}
+            json_response = requests.post('http://cordyceps@gogogo.kr:8501/v1/models/cordyceps_pretrain:predict', data=data, headers=headers)
+            
+            predictions = json.loads(json_response.text)['predictions']
+            result = class_name[np.argmax(predictions[0])]
+            confidence = int(np.max(predictions[0])*100)
+            if result == 'contaminated' and confidence > 65:
+                contaminated+=1
+                minr, minc, maxr, maxc = props.bbox
+                x,y,w,h = minr,minc,maxr-minr,maxc-minc
+                origin_image = cv2.rectangle(origin_image,(x,y),(x+w,y+h),(255,0,0),2)
+                cv2.putText(origin_image, str(confidence)+'%', (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,0), 1, lineType=cv2.LINE_AA)
+        
+        io.imsave('/home/ubuntu/dev/cordyceps/process/result.jpg', origin_image)
+        
+        if contaminated/len(regions)>0.3:
+            true_or_false = 't'
+        print(true_or_false)
     
     
     def process(self):
