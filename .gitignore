@@ -130,9 +130,9 @@ dmypy.json
 
 # personal
 myvenv/
-cnn/data
-cnn/image
-cnn/model
+data
+image
+model
 config.py
 cordyceps.h5
-process/
+last.pt

@@ -10,10 +10,10 @@ from config import cfg
 
 print(tf.__version__)
 print(keras.__version__)
-IMG_SIZE=64
+IMG_SIZE = (64, 64)
 BATCH_SIZE=16
 SHUFFLE_BUFFER_SIZE = 1000
-IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)
+IMG_SHAPE = IMG_SIZE+(3,)
 
 
 class Model:
@@ -57,6 +57,7 @@ class Model:
     def preprocess_image(self):
         self.train_images = self.train_images.astype(np.float32) / 255.0
         self.test_images = self.test_images.astype(np.float32) / 255.0
+        print(self.train_images.shape)
         self.train_images, self.valid_images, self.train_labels, self.valid_labels = train_test_split(
             self.train_images, self.train_labels, stratify=self.train_labels, test_size=0.2, random_state=44
             )
@@ -92,7 +93,7 @@ class Model:
         #             metrics=['accuracy'])
 
         epochs = 20
-        batch_size = 32
+        # batch_size = 32
         is_callback = True
         checkpoint_cb = keras.callbacks.ModelCheckpoint(os.path.join(cfg['base']['path'],cfg['model']['callback']))
         early_stopping_cb = keras.callbacks.EarlyStopping(patience=2, restore_best_weights=True)
@@ -102,8 +103,8 @@ class Model:
             self.train_labels,
             epochs = epochs,
             validation_data=(self.valid_images, self.valid_labels),
-            batch_size = batch_size,
-            steps_per_epoch=self.train_images.shape[0]//batch_size,
+            # batch_size = batch_size,
+            # steps_per_epoch=self.train_images.shape[0]//batch_size,
             callbacks=[checkpoint_cb, early_stopping_cb] if is_callback else None
         )
 
